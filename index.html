@@ -20,31 +20,35 @@
             min-height: 100vh;
         }
 
-        /* --- PRINT STYLES (THE FIX) --- */
+        /* --- PRINT STYLES (FIXED) --- */
         @media print {
             body * {
-                visibility: hidden; /* Hide everything by default */
+                visibility: hidden; /* Hide everything else */
             }
             #printable-area, #printable-area * {
-                visibility: visible; /* Show only the report */
+                visibility: visible; /* Make report visible */
             }
             #printable-area {
+                display: block !important; /* <--- CRITICAL FIX: Forces element to exist */
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
+                height: auto;
                 background: white;
                 color: black;
-                padding: 20px;
+                padding: 40px;
                 z-index: 999999;
+                font-size: 12pt;
             }
-            /* Force text color for print */
-            h1, h2, h3, h4, p, li, strong {
+            /* Ensure text is black for printers */
+            h1, h2, h3, h4, p, li, strong, b, span, div {
                 color: black !important;
                 -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
-            /* Hide the download buttons during print */
-            .no-print {
+            /* Hide UI elements explicitly */
+            .no-print, #content-modal, #intro-modal, #loading-overlay, #download-bar {
                 display: none !important;
             }
         }
@@ -198,7 +202,7 @@
             pointer-events: none;
         }
 
-        /* Printable Area (Hidden normally, shown during print) */
+        /* Printable Area (Hidden normally) */
         #printable-area {
             display: none;
         }
@@ -236,7 +240,7 @@
                     <h3 id="modal-title" class="text-xl font-bold text-indigo-400">Topic Details</h3>
                 </div>
                 <div class="flex items-center gap-3">
-                    <!-- NEW DOWNLOAD BUTTON (Triggers Native Print) -->
+                    <!-- DOWNLOAD BUTTON (Native Print) -->
                     <button onclick="printReport()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg flex items-center gap-2">
                         <i class="fas fa-file-pdf"></i> Save as PDF
                     </button>
@@ -524,17 +528,11 @@
 
                 title.innerText = topic.title;
                 
-                // Inject content for viewing (styled for dark mode readability)
-                // We use the same content but the PDF print style handles color.
-                // However, for modal view, we need white text.
+                // Content for modal view (readable white box)
                 let viewHtml = topic.fullHtml;
-                // Simple regex to make text readable in dark modal if needed, 
-                // but our inline styles in fullHtml force black. 
-                // Let's strip the inline black color for the preview or wrap it in a white box.
-                // Actually, a white paper view in the modal looks nice.
                 body.innerHTML = `<div class="bg-white text-black p-8 rounded-lg shadow-lg">${viewHtml}</div>`;
                 
-                // Inject content for printing
+                // Content for printing (hidden area)
                 printable.innerHTML = viewHtml;
 
                 modal.style.display = 'flex';
@@ -545,7 +543,7 @@
             document.getElementById('content-modal').style.display = 'none';
         }
 
-        // --- 5. NATIVE PRINT FUNCTION (THE NUCLEAR FIX) ---
+        // --- 5. NATIVE PRINT FUNCTION (FIXED) ---
         function printReport() {
             window.print();
         }
