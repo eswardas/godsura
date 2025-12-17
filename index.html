@@ -1,618 +1,279 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SURA THE TOPIC GOD</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        /* --- CORE STYLES --- */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #050505;
-            background-image: 
-                radial-gradient(circle at 50% 0%, #2e1065 0%, transparent 50%),
-                radial-gradient(circle at 100% 100%, #1e1b4b 0%, transparent 50%);
-            color: #fff;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
+import React, { useState, useEffect } from 'react';
+import { Shuffle, FileDown, Users, GraduationCap } from 'lucide-react';
 
-        /* --- PRINT STYLES (FIXED) --- */
-        @media print {
-            body * {
-                visibility: hidden; /* Hide everything else */
-            }
-            #printable-area, #printable-area * {
-                visibility: visible; /* Make report visible */
-            }
-            #printable-area {
-                display: block !important; /* <--- CRITICAL FIX: Forces element to exist */
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: auto;
-                background: white;
-                color: black;
-                padding: 40px;
-                z-index: 999999;
-                font-size: 12pt;
-                line-height: 1.6;
-            }
-            /* Ensure text is black for printers */
-            h1, h2, h3, h4, p, li, strong, b, span, div {
-                color: black !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            /* Hide UI elements explicitly */
-            .no-print, #content-modal, #intro-modal, #loading-overlay, #download-bar {
-                display: none !important;
-            }
-        }
+const TUTORS = [
+  "HAK",
+  "KPB",
+  "GCZ",
+  "VTV",
+  "PJD",
+  "FA",
+  "NCV",
+  "CMS"
+];
 
-        /* --- REGULAR UI STYLES --- */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #4c1d95; border-radius: 4px; }
+// Configuration
+const TOTAL_ROLL_NUMBERS = 60;
+const EXCLUDED_ROLL = 57;
 
-        h1.god-title {
-            font-family: 'Cinzel', serif;
-            text-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
-        }
+// Allocation rules
+const HAK_COUNT = 6;
+const STANDARD_COUNT = 7; // For everyone else except KPB
 
-        /* --- LIGHTNING HALO VFX --- */
-        .god-halo-container {
-            position: relative;
-            width: 220px;
-            height: 220px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto;
-        }
-        .halo-core-glow {
-            position: absolute;
-            width: 160px;
-            height: 160px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, rgba(76, 29, 149, 0) 70%);
-            filter: blur(20px);
-            animation: corePulse 2s ease-in-out infinite;
-            z-index: 0;
-        }
-        .electric-ring-1 {
-            position: absolute;
-            inset: -10px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            border-top: 4px solid #a855f7; 
-            border-left: 2px solid #6366f1; 
-            box-shadow: 0 0 15px #a855f7, inset 0 0 10px #a855f7;
-            animation: spinLightning 1.5s linear infinite;
-            z-index: 1;
-        }
-        .electric-ring-2 {
-            position: absolute;
-            inset: -25px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            border-right: 4px solid #ec4899; 
-            border-bottom: 2px solid #8b5cf6; 
-            box-shadow: 0 0 20px #ec4899;
-            animation: spinLightningReverse 2.5s linear infinite;
-            opacity: 0.8;
-            z-index: 1;
-        }
-        .electric-ring-3 {
-            position: absolute;
-            inset: -40px;
-            border-radius: 50%;
-            border: 1px solid transparent;
-            border-top: 6px solid #fff;
-            box-shadow: 0 0 30px #fff;
-            filter: blur(1px);
-            animation: spinLightning 4s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
-            opacity: 0.5;
-            z-index: 1;
-        }
+export default function App() {
+  const [allocation, setAllocation] = useState([]);
+  const [isPdfReady, setIsPdfReady] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-        @keyframes spinLightning { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.05); } 100% { transform: rotate(360deg) scale(1); } }
-        @keyframes spinLightningReverse { 0% { transform: rotate(360deg) scale(1); } 50% { transform: rotate(180deg) scale(0.95); } 100% { transform: rotate(0deg) scale(1); } }
-        @keyframes corePulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+  // Load jsPDF library dynamically
+  useEffect(() => {
+    const loadScript = (src) => {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    };
 
-        .sura-img {
-            width: 170px;
-            height: 170px;
-            object-fit: contain;
-            z-index: 10;
-            position: relative;
-            animation: floatGod 4s ease-in-out infinite;
-            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
+    Promise.all([
+      loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
+      loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js')
+    ])
+    .then(() => {
+      setIsPdfReady(true);
+    })
+    .catch((err) => console.error('Failed to load PDF libraries', err));
+  }, []);
+
+  const handleAllocate = () => {
+    setLoading(true);
+    
+    setTimeout(() => {
+      // 1. Create array of students [1...60], excluding 57
+      const students = Array.from({ length: TOTAL_ROLL_NUMBERS }, (_, i) => i + 1)
+        .filter(num => num !== EXCLUDED_ROLL);
+
+      // 2. Fisher-Yates Shuffle
+      for (let i = students.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [students[i], students[j]] = [students[j], students[i]];
+      }
+
+      // 3. Custom Distribution Logic
+      // Strategy: 
+      // - HAK gets exactly 6
+      // - Others (except KPB) get 7
+      // - KPB gets the rest (which should be 11)
+      
+      const newAllocation = TUTORS.map(tutorName => ({
+        name: tutorName,
+        students: []
+      }));
+
+      let studentPointer = 0;
+
+      // Helper to find tutor by name and assign students
+      const assignToTutor = (name, count) => {
+        const targetGroup = newAllocation.find(g => g.name === name);
+        if (targetGroup) {
+            // If count is null, take all remaining
+            const takeCount = count === null ? (students.length - studentPointer) : count;
+            targetGroup.students = students.slice(studentPointer, studentPointer + takeCount);
+            studentPointer += takeCount;
         }
-        @keyframes floatGod { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+      };
 
-        /* --- UI COMPONENTS --- */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-        .custom-input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .custom-input:focus {
-            border-color: #a855f7;
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
-            outline: none;
-        }
+      // A. Assign HAK (6)
+      assignToTutor("HAK", HAK_COUNT);
 
-        /* Loading Overlay */
-        #loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 200;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .loading-img { width: 150px; animation: spinSlow 10s linear infinite; }
-        @keyframes spinSlow { 100% { transform: rotate(360deg); } }
+      // B. Assign Others (7 each) - Skipping KPB for now
+      const otherTutors = TUTORS.filter(t => t !== "HAK" && t !== "KPB");
+      otherTutors.forEach(tutorName => {
+        assignToTutor(tutorName, STANDARD_COUNT);
+      });
 
-        /* Full Content Modal */
-        #content-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(5px);
-            z-index: 150;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .modal-content {
-            background: #0f172a;
-            border: 1px solid #4c1d95;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border-radius: 20px;
-            box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
-            position: relative;
-        }
+      // C. Assign KPB (The Maximum / Remainder)
+      assignToTutor("KPB", null);
 
-        /* Jumpscare */
-        #jumpscare-img {
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 100000;
-            display: none;
-            pointer-events: none;
-        }
+      // 4. Sort student numbers for cleaner display within each tutor group
+      newAllocation.forEach(group => {
+        group.students.sort((a, b) => a - b);
+      });
 
-        /* Printable Area (Hidden normally) */
-        #printable-area {
-            display: none;
-        }
-    </style>
-</head>
-<body class="flex flex-col items-center">
+      setAllocation(newAllocation);
+      setLoading(false);
+    }, 400);
+  };
 
-    <!-- JUMPSCARE ELEMENT -->
-    <img id="jumpscare-img" src="fazal.png" alt="Scare">
+  const handleDownloadPDF = () => {
+    if (!window.jspdf || allocation.length === 0) return;
 
-    <!-- Intro Modal -->
-    <div id="intro-modal" class="fixed inset-0 bg-black z-[300] flex flex-col justify-center items-center transition-opacity duration-700">
-        <h1 class="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-8 tracking-widest god-title text-center px-4">
-            SURA THE TOPIC GOD
-        </h1>
-        <p class="text-gray-400 mb-10 text-lg max-w-md text-center">I hold the knowledge of a thousand libraries.</p>
-        <button onclick="enterSite()" class="group relative px-8 py-4 bg-transparent border border-purple-500 rounded-full font-bold text-xl overflow-hidden hover:text-white transition-colors duration-300">
-            <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-            <span class="relative z-10">ENTER THE SANCTUARY</span>
-        </button>
-    </div>
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay">
-        <img src="f90.png" alt="Loading..." class="loading-img mb-6 rounded-full border-4 border-purple-500 shadow-[0_0_50px_#a855f7]">
-        <h2 class="text-3xl font-bold text-purple-400 animate-pulse">Consulting the Archives...</h2>
-        <p class="text-gray-400 mt-2">Weaving words of academic power...</p>
-    </div>
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(41, 128, 185);
+    doc.text("Student-Tutor Allocation Report", 105, 15, { align: "center" });
+    
+    // Timestamp
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, { align: "center" });
 
-    <!-- Content Reading Modal -->
-    <div id="content-modal">
-        <div class="modal-content animate-fade-in-up">
-            <div class="sticky top-0 bg-[#0f172a] p-4 border-b border-gray-700 flex justify-between items-center z-10 no-print">
-                <div class="flex items-center gap-4">
-                    <h3 id="modal-title" class="text-xl font-bold text-indigo-400">Topic Details</h3>
-                </div>
-                <div class="flex items-center gap-3">
-                    <!-- DOWNLOAD BUTTON (Native Print) -->
-                    <button onclick="printReport()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg flex items-center gap-2">
-                        <i class="fas fa-file-pdf"></i> Save as PDF
-                    </button>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-white transition-colors p-2">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-            <!-- The content body -->
-            <div id="modal-body" class="p-8"></div>
-        </div>
-    </div>
+    // Prepare table data
+    const tableBody = allocation.map(group => [
+      group.name,
+      group.students.join(", "),
+      group.students.length // Added count column for clarity given the uneven split
+    ]);
 
-    <!-- Hidden Container for Printing -->
-    <div id="printable-area"></div>
+    doc.autoTable({
+      head: [['Tutor Name', 'Assigned Roll Numbers', 'Count']],
+      body: tableBody,
+      startY: 30,
+      theme: 'grid',
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 40, fontStyle: 'bold' },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 20, halign: 'center' }
+      },
+      styles: { fontSize: 10, cellPadding: 3 },
+      didDrawPage: function (data) {
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(
+          `Page ${doc.internal.getNumberOfPages()}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
 
-    <!-- Main Container -->
-    <div class="container mx-auto px-4 py-8 max-w-6xl relative z-10 no-print">
+    doc.save("tutor-allocation.pdf");
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
         
-        <!-- Header Section -->
-        <header class="flex flex-col items-center justify-center mb-16 mt-8">
-            <div class="god-halo-container mb-8">
-                <div class="halo-core-glow"></div>
-                <div class="electric-ring-1"></div>
-                <div class="electric-ring-2"></div>
-                <div class="electric-ring-3"></div>
-                <img src="f100.png" alt="Sura The God" class="sura-img">
-            </div>
-            
-            <h1 class="text-4xl md:text-7xl font-extrabold text-center tracking-tight god-title mb-2">
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">SURA</span> THE TOPIC GOD
-            </h1>
-            <p class="text-indigo-200 text-center max-w-2xl text-lg font-light">
-                "I do not just give topics. I bestow academic destiny."
-            </p>
-        </header>
-
-        <!-- Input Form Section -->
-        <div class="glass-panel rounded-3xl p-8 md:p-12 mb-16 border-t border-purple-500/30">
-            <form id="topicForm" onsubmit="generateTopics(event)" class="space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-purple-300 uppercase tracking-widest ml-1">Current Education</label>
-                        <input type="text" id="education" placeholder="e.g. Final Year CS, MBA..." required
-                            class="custom-input w-full p-4 rounded-xl text-lg placeholder-gray-600">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-purple-300 uppercase tracking-widest ml-1">Sacred Request</label>
-                        <div class="relative">
-                            <select id="topicType" class="custom-input w-full p-4 rounded-xl text-lg appearance-none cursor-pointer">
-                                <option value="Project">Project Implementation</option>
-                                <option value="Seminar">Seminar Research</option>
-                            </select>
-                            <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-purple-400">
-                                <i class="fas fa-scroll"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-purple-300 uppercase tracking-widest ml-1">Time Available</label>
-                        <input type="text" id="timeConstraint" placeholder="e.g. 3 Months, 2 Weeks..." 
-                            class="custom-input w-full p-4 rounded-xl text-lg placeholder-gray-600">
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold text-purple-300 uppercase tracking-widest ml-1">Your Calling (Interests)</label>
-                    <textarea id="interests" rows="3" placeholder="Describe your field... (e.g. AI for medical, BlockChain voting, Solving water scarcity...)" 
-                        class="custom-input w-full p-4 rounded-xl text-lg placeholder-gray-600"></textarea>
-                    <p class="text-xs text-gray-500 text-right font-mono">Sura uses these keywords to craft your destiny.</p>
-                </div>
-
-                <button type="submit" id="submitBtn" class="w-full py-6 bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 rounded-2xl font-bold text-xl md:text-2xl shadow-[0_10px_40px_rgba(139,92,246,0.5)] hover:shadow-[0_15px_50px_rgba(139,92,246,0.7)] transition-all transform hover:-translate-y-1 active:scale-95 flex justify-center items-center gap-4 text-white border border-white/10">
-                    <span>SUMMON TOPICS</span>
-                    <i class="fas fa-bolt text-yellow-300 animate-pulse"></i>
-                </button>
-            </form>
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center p-3 bg-blue-600 rounded-full shadow-lg mb-4">
+            <GraduationCap className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Tutor Allocation System
+          </h1>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Randomly assign students (1-60, excl. 57) to faculty mentors.
+          </p>
         </div>
 
-        <!-- Output Section -->
-        <div id="resultsArea" class="hidden space-y-10 pb-32">
-            <div class="flex items-center justify-center gap-4 border-b border-gray-800 pb-6">
-                <i class="fas fa-crown text-yellow-400 text-3xl"></i>
-                <h2 class="text-3xl md:text-4xl font-bold god-title text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-white">
-                    Divine Recommendations
-                </h2>
-                <i class="fas fa-crown text-yellow-400 text-3xl"></i>
-            </div>
-            
-            <div id="cardsContainer" class="grid grid-cols-1 gap-8">
-                <!-- Cards injected here -->
-            </div>
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+          <button
+            onClick={handleAllocate}
+            disabled={loading}
+            className={`
+              flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md transition-all transform hover:-translate-y-1
+              ${loading 
+                ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
+                : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg active:scale-95'}
+            `}
+          >
+            <Shuffle className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            {allocation.length === 0 ? 'Generate Allocation' : 'Re-Shuffle Allocation'}
+          </button>
+
+          {allocation.length > 0 && (
+            <button
+              onClick={handleDownloadPDF}
+              disabled={!isPdfReady}
+              className={`
+                flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md border-2 transition-all transform hover:-translate-y-1
+                ${!isPdfReady 
+                  ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-wait' 
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-blue-200 hover:bg-blue-50 active:scale-95'}
+              `}
+            >
+              <FileDown className="w-5 h-5" />
+              Download PDF
+            </button>
+          )}
         </div>
+
+        {/* Results Grid */}
+        {allocation.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {allocation.map((group, idx) => (
+              <div 
+                key={idx} 
+                className={`
+                  rounded-2xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col
+                  ${group.name === 'KPB' ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100' : 'bg-white border-slate-200'}
+                `}
+              >
+                <div className={`
+                  p-4 flex items-center justify-between border-b
+                  ${group.name === 'KPB' ? 'bg-blue-100 border-blue-200' : 'bg-slate-50 border-slate-100'}
+                `}>
+                  <div className="flex items-center gap-3">
+                    <div className={`
+                      w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm
+                      ${group.name === 'KPB' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}
+                    `}>
+                      {group.name.substring(0,2)}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-800 leading-tight">{group.name}</h3>
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        {group.name === 'KPB' ? 'Head Faculty' : 'Faculty'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`
+                    text-xs font-bold px-2 py-1 rounded-full
+                    ${group.name === 'KPB' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}
+                  `}>
+                    {group.students.length}
+                  </span>
+                </div>
+                
+                <div className="p-4 flex-grow">
+                  <div className="flex flex-wrap gap-2">
+                    {group.students.map((rollNo) => (
+                      <span 
+                        key={rollNo}
+                        className={`
+                          inline-flex items-center justify-center w-8 h-8 text-sm font-medium rounded-lg cursor-default transition-colors
+                          ${group.name === 'KPB' 
+                            ? 'bg-white text-blue-700 border border-blue-100 shadow-sm' 
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}
+                        `}
+                      >
+                        {rollNo}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {allocation.length === 0 && !loading && (
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+            <Users className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-slate-400">Ready to Allocate</h3>
+            <p className="text-slate-400 mt-2">Click the button above to start the randomization.</p>
+          </div>
+        )}
+      </div>
     </div>
-
-    <script>
-        // --- 1. Sound & Intro ---
-        function enterSite() {
-            const modal = document.getElementById('intro-modal');
-            const msg = new SpeechSynthesisUtterance("Sura helping hand");
-            msg.rate = 0.8; msg.pitch = 0.8; msg.volume = 1;
-            window.speechSynthesis.speak(msg);
-            modal.style.opacity = '0';
-            setTimeout(() => { modal.style.display = 'none'; }, 700);
-        }
-
-        // --- 2. DEEP CONTENT ENGINE ---
-        const techStacks = {
-            web: "React.js, Node.js, MongoDB, Express, TailwindCSS, AWS S3",
-            ai: "Python, TensorFlow, Keras, OpenCV, Scikit-learn, Flask API",
-            iot: "Arduino/Raspberry Pi, MQTT Protocol, C++, Python, Firebase Realtime DB",
-            blockchain: "Solidity, Ethereum (Sepolia Testnet), Web3.js, Metamask, IPFS",
-            mobile: "Flutter/React Native, Firebase Auth, Google Maps API, Stripe Gateway",
-            security: "Python, Wireshark, Burp Suite, Cryptography Libraries, Linux"
-        };
-
-        const phraseBank = {
-            openers: [
-                "In the rapidly evolving landscape of modern technology, the necessity for robust and scalable solutions has become paramount.",
-                "The advent of digital transformation has necessitated a paradigm shift in how we approach this specific problem domain."
-            ],
-            problems: [
-                "Current existing systems suffer from high latency, lack of scalability, and significant manual intervention, leading to operational inefficiencies.",
-                "A major limitation of contemporary solutions is their inability to handle real-time data processing without substantial computational overhead."
-            ],
-            proposed: [
-                "Our proposed system leverages state-of-the-art algorithms to ensure 99.9% accuracy while maintaining a seamless user experience.",
-                "By integrating advanced predictive modeling, the system optimizes resource allocation and reduces operational costs by approximately 40%."
-            ],
-            modules: [
-                "User Authentication & Authorization Module",
-                "Data Preprocessing & Cleaning Engine",
-                "Core Logic / Algorithm Processing Unit",
-                "Admin Dashboard for Analytics & Reporting",
-                "Real-time Notification Service"
-            ],
-            conclusion: [
-                "In conclusion, this project demonstrates the feasibility and effectiveness of using this technology to solve real-world problems.",
-                "The implementation highlights significant improvements over traditional methods, offering a robust foundation for future research."
-            ]
-        };
-
-        // --- PROJECT TOPICS ---
-        const baseTopics = [
-            { t: "AI-Driven Early Disease Detection", cat: "ai", core: "detecting diseases like pneumonia from X-rays" },
-            { t: "Smart Traffic Control System", cat: "ai", core: "managing traffic lights based on vehicle density" },
-            { t: "Decentralized E-Voting Platform", cat: "blockchain", core: "using blockchain to ensure vote integrity" },
-            { t: "Precision Agriculture Bot", cat: "iot", core: "monitoring soil moisture and automating irrigation" },
-            { t: "Phishing Website Detector", cat: "security", core: "using ML to classify malicious URLs in real-time" },
-            { t: "Smart Energy Metering System", cat: "iot", core: "tracking household energy usage to prevent wastage" },
-            { t: "Gesture Controlled Virtual Mouse", cat: "ai", core: "controlling cursor using hand movements via webcam" },
-            { t: "Hyper-Local Skill Barter App", cat: "web", core: "allowing neighbors to swap services without money" },
-            { t: "Fake News Detection Engine", cat: "ai", core: "analyzing linguistic patterns to flag misinformation" },
-            { t: "Secure File Storage on IPFS", cat: "blockchain", core: "encrypting and storing files decentrally" },
-            { t: "AR Interior Design Assistant", cat: "mobile", core: "visualizing furniture in rooms using AR" },
-            { t: "Blind Assistance Voice Email", cat: "ai", core: "enabling visually impaired to email via voice" },
-            { t: "Crypto-Based Crowdfunding", cat: "blockchain", core: "transparent fundraising using smart contracts" },
-            { t: "Drowsiness Detection for Drivers", cat: "ai", core: "alerting drivers when they fall asleep" },
-            { t: "Automated Attendance System", cat: "ai", core: "using face recognition to mark attendance" }
-        ];
-
-        // --- SEMINAR TOPICS ---
-        const seminarTopics = [
-            { t: "5G Technology and Edge Computing", cat: "iot", core: "analyzing low-latency network architectures" },
-            { t: "The Future of Quantum Cryptography", cat: "security", core: "investigating post-quantum security protocols" },
-            { t: "Ethical AI: Bias in Machine Learning", cat: "ai", core: "studying fairness and transparency in algorithms" },
-            { t: "Green Cloud Computing Strategies", cat: "web", core: "optimizing data centers for energy efficiency" },
-            { t: "Blockchain in Supply Chain Management", cat: "blockchain", core: "enhancing transparency in logistics" },
-            { t: "Deepfakes and Digital Forensics", cat: "ai", core: "detecting synthetic media manipulation" },
-            { t: "Neuromorphic Computing Architectures", cat: "ai", core: "mimicking biological neural networks in hardware" },
-            { t: "Serverless Architecture Patterns", cat: "web", core: "evaluating function-as-a-service models" },
-            { t: "Security Challenges in IoT Ecosystems", cat: "iot", core: "identifying vulnerabilities in connected devices" },
-            { t: "Evolution of Web 3.0", cat: "web", core: "decentralizing the future internet" }
-        ];
-
-        function expandContent(topic, type, time) {
-            const r = (arr) => arr[Math.floor(Math.random() * arr.length)];
-            const stack = techStacks[topic.cat] || "Standard Full Stack";
-            
-            let fullHtml = '';
-            
-            if (type === 'Seminar') {
-                // SEMINAR LOGIC: Extended Abstract / Long Form Text
-                fullHtml = `
-                <div style="font-family: 'Times New Roman', serif; color: #000; line-height: 1.8; font-size: 12pt;">
-                    <h1 style="font-size: 26px; font-weight: bold; text-align: center; margin-bottom: 30px; text-transform: uppercase;">${topic.t}</h1>
-                    
-                    <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">Abstract</h3>
-                    <p style="text-align: justify; margin-bottom: 20px;">
-                        ${r(phraseBank.openers)} The seminar topic titled "<strong>${topic.t}</strong>" explores the critical dimensions of ${topic.core}. In the current technological era, understanding this concept is pivotal for future advancements. ${r(phraseBank.problems)} This report aims to provide a comprehensive overview of the underlying mechanisms, potential applications, and the future trajectory of this domain.
-                    </p>
-                    <p style="text-align: justify; margin-bottom: 20px;">
-                        As we delve deeper into the 21st century, the relevance of ${topic.cat.toUpperCase()} technologies cannot be overstated. This seminar investigates how ${topic.core} serves as a cornerstone for innovation. By analyzing recent trends and academic literature, we observe a significant shift towards more intelligent, efficient, and scalable solutions. The study highlights the theoretical underpinnings that make this technology feasible and the practical constraints that researchers are currently striving to overcome.
-                    </p>
-
-                    <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">Detailed Analysis</h3>
-                    <p style="text-align: justify; margin-bottom: 20px;">
-                        The core principle of this topic revolves around optimizing performance and enhancing capability. ${r(phraseBank.proposed)} Unlike traditional approaches, which often suffer from rigidity, the modern paradigm of ${topic.t} offers flexibility and adaptability. Key research indicates that integrating these concepts leads to substantial improvements in system reliability and user satisfaction.
-                    </p>
-                    <p style="text-align: justify; margin-bottom: 20px;">
-                        Furthermore, the impact extends beyond mere technical specifications. It influences economic models, social interactions, and regulatory frameworks. For instance, in the context of ${topic.cat}, the deployment of such systems requires a careful balance between efficiency and ethical considerations. The seminar further explores these socio-technical implications, providing a holistic view of the subject matter.
-                    </p>
-
-                    <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">Key Applications & Future Scope</h3>
-                    <p style="text-align: justify; margin-bottom: 15px;">The theoretical concepts discussed have wide-ranging applications:</p>
-                    <ul style="list-style-type: disc; padding-left: 20px; margin-bottom: 20px;">
-                        <li>Advancements in <strong>${topic.cat.toUpperCase()}</strong> infrastructure.</li>
-                        <li>Optimization of existing legacy systems for better performance.</li>
-                        <li>Development of next-generation frameworks supporting ${topic.core}.</li>
-                        <li>Research opportunities in predictive analysis and automation.</li>
-                    </ul>
-
-                    <h3 style="font-size: 14pt; font-weight: bold; margin-bottom: 10px; text-transform: uppercase;">Conclusion</h3>
-                    <p style="text-align: justify; margin-bottom: 20px;">
-                        ${r(phraseBank.conclusion)} The exploration of <strong>${topic.t}</strong> reveals a landscape rich with potential and challenges. As technology continues to evolve, staying abreast of these developments is essential for academic and professional growth. This seminar concludes that while significant progress has been made, the journey towards fully realizing the potential of ${topic.core} is ongoing and requires sustained research efforts.
-                    </p>
-                    
-                    <br><br>
-                    <div style="text-align: center; border-top: 1px solid #000; padding-top: 10px; font-size: 10pt;">
-                        <i>Seminar Report Generated by SURA THE TOPIC GOD</i>
-                    </div>
-                </div>
-                `;
-            } else {
-                // PROJECT LOGIC (Existing)
-                fullHtml = `
-                <div style="font-family: 'Times New Roman', serif; color: #000; line-height: 1.6;">
-                    <h1 style="font-size: 28px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">${topic.t}</h1>
-                    
-                    <h2 style="font-size: 18px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">1. Abstract</h2>
-                    <p style="text-align: justify; margin-bottom: 15px;">${r(phraseBank.openers)} The project titled "<strong>${topic.t}</strong>" focuses on ${topic.core}. ${r(phraseBank.problems)} This abstract outlines the development of a comprehensive system designed to mitigate these issues.</p>
-                    
-                    <h2 style="font-size: 18px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">2. Introduction & Problem Statement</h2>
-                    <p style="text-align: justify; margin-bottom: 15px;">In the domain of ${topic.cat.toUpperCase()}, the demand for automation is high. ${r(phraseBank.openers)} The specific problem is the lack of efficient mechanisms for ${topic.core}. This creates a compelling need for a solution.</p>
-                    
-                    <h2 style="font-size: 18px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">3. Proposed Methodology</h2>
-                    <p style="text-align: justify; margin-bottom: 15px;">${r(phraseBank.proposed)} The methodology involves:</p>
-                    <ul style="list-style-type: disc; padding-left: 20px; margin-bottom: 15px;">
-                        <li><strong>Requirement Analysis:</strong> Gathering specific constraints.</li>
-                        <li><strong>System Design:</strong> Creating architectural diagrams.</li>
-                        <li><strong>Implementation:</strong> Coding using ${stack}.</li>
-                        <li><strong>Testing:</strong> Ensuring reliability.</li>
-                    </ul>
-                    <p>Timeframe: <strong>${time}</strong>.</p>
-
-                    <h2 style="font-size: 18px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">4. System Modules</h2>
-                    <ul style="list-style-type: disc; padding-left: 20px; margin-bottom: 15px;">
-                        ${phraseBank.modules.map(m => `<li>${m}</li>`).join('')}
-                    </ul>
-
-                    <h2 style="font-size: 18px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">5. Technology Stack</h2>
-                    <p><strong>Domain:</strong> ${topic.cat.toUpperCase()}</p>
-                    <p><strong>Stack:</strong> ${stack}</p>
-
-                    <h2 style="font-size: 18px; font-weight: bold; margin-top: 20px; text-transform: uppercase;">6. Conclusion</h2>
-                    <p style="text-align: justify;">${r(phraseBank.conclusion)} By addressing ${topic.core}, this project stands as a testament to modern engineering.</p>
-                    
-                    <br><br>
-                    <p style="text-align: center; font-size: 12px; color: #555; border-top: 1px solid #ccc; padding-top: 10px;">Generated by SURA THE TOPIC GOD</p>
-                </div>
-                `;
-            }
-
-            return {
-                title: topic.t,
-                abstract: `${r(phraseBank.openers)} This ${type.toLowerCase()} focuses on ${topic.core}.`, 
-                tech: stack,
-                fullHtml: fullHtml 
-            };
-        }
-
-        // --- 3. Generator Logic ---
-        let currentResults = [];
-        let currentModalIndex = -1;
-
-        function generateTopics(e) {
-            e.preventDefault();
-            const loader = document.getElementById('loading-overlay');
-            const resultsArea = document.getElementById('resultsArea');
-            
-            loader.style.display = 'flex';
-            resultsArea.classList.add('hidden');
-            
-            const interests = document.getElementById('interests').value.toLowerCase();
-            const time = document.getElementById('timeConstraint').value || "3 Months";
-            const type = document.getElementById('topicType').value;
-
-            setTimeout(() => {
-                // Determine Source Array based on Selection
-                let sourceArray = (type === 'Seminar') ? seminarTopics : baseTopics;
-
-                let pool = sourceArray.filter(t => interests.includes(t.cat) || interests.includes(t.core.split(' ')[0]) || interests.includes('')); 
-                const specific = sourceArray.filter(t => interests.includes(t.cat));
-                if(specific.length > 0) pool = specific;
-
-                while(pool.length < 5) {
-                    const random = sourceArray[Math.floor(Math.random() * sourceArray.length)];
-                    if(!pool.includes(random)) pool.push(random);
-                }
-
-                pool.sort(() => Math.random() - 0.5);
-                const finalRaw = pool.slice(0, 5);
-                currentResults = finalRaw.map(t => expandContent(t, type, time));
-                renderCards();
-                loader.style.display = 'none';
-                resultsArea.classList.remove('hidden');
-                resultsArea.scrollIntoView({ behavior: 'smooth' });
-            }, 2000); 
-        }
-
-        function renderCards() {
-            const container = document.getElementById('cardsContainer');
-            container.innerHTML = '';
-
-            currentResults.forEach((topic, index) => {
-                const card = document.createElement('div');
-                card.className = 'glass-panel rounded-2xl p-8 border border-gray-700 hover:border-purple-500 transition-all duration-300 relative group';
-                
-                card.innerHTML = `
-                    <div class="flex flex-col gap-4">
-                        <h3 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-indigo-300 pr-10">${index + 1}. ${topic.title}</h3>
-                        <div class="bg-black/30 p-4 rounded-lg border-l-4 border-purple-500">
-                            <p class="text-gray-300 text-sm leading-relaxed text-justify">${topic.abstract}</p>
-                        </div>
-                        <div class="flex justify-end mt-2">
-                            <button onclick="viewContent(${index})" class="text-sm bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg transition-colors shadow-lg font-bold border border-indigo-500/50 flex items-center gap-2">
-                                <i class="fas fa-eye"></i> View & Print Report
-                            </button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // --- 4. Modal Logic (WITH JUMPSCARE) ---
-        function viewContent(index) {
-            const jumpscare = document.getElementById('jumpscare-img');
-            jumpscare.style.display = 'block';
-            
-            setTimeout(() => {
-                jumpscare.style.display = 'none';
-                currentModalIndex = index;
-                const topic = currentResults[index];
-                const modal = document.getElementById('content-modal');
-                const title = document.getElementById('modal-title');
-                const body = document.getElementById('modal-body');
-                const printable = document.getElementById('printable-area');
-
-                title.innerText = topic.title;
-                
-                // Content for modal view (readable white box)
-                let viewHtml = topic.fullHtml;
-                body.innerHTML = `<div class="bg-white text-black p-8 rounded-lg shadow-lg">${viewHtml}</div>`;
-                
-                // Content for printing (hidden area)
-                printable.innerHTML = viewHtml;
-
-                modal.style.display = 'flex';
-            }, 400); 
-        }
-
-        function closeModal() {
-            document.getElementById('content-modal').style.display = 'none';
-        }
-
-        // --- 5. NATIVE PRINT FUNCTION (FIXED) ---
-        function printReport() {
-            window.print();
-        }
-
-    </script>
-</body>
-</html>
+  );
+}
