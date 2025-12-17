@@ -1,279 +1,279 @@
-import React, { useState, useEffect } from 'react';
-import { Shuffle, FileDown, Users, GraduationCap } from 'lucide-react';
-
-const TUTORS = [
-  "HAK",
-  "KPB",
-  "GCZ",
-  "VTV",
-  "PJD",
-  "FA",
-  "NCV",
-  "CMS"
-];
-
-// Configuration
-const TOTAL_ROLL_NUMBERS = 60;
-const EXCLUDED_ROLL = 57;
-
-// Allocation rules
-const HAK_COUNT = 6;
-const STANDARD_COUNT = 7; // For everyone else except KPB
-
-export default function App() {
-  const [allocation, setAllocation] = useState([]);
-  const [isPdfReady, setIsPdfReady] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Load jsPDF library dynamically
-  useEffect(() => {
-    const loadScript = (src) => {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    };
-
-    Promise.all([
-      loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
-      loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js')
-    ])
-    .then(() => {
-      setIsPdfReady(true);
-    })
-    .catch((err) => console.error('Failed to load PDF libraries', err));
-  }, []);
-
-  const handleAllocate = () => {
-    setLoading(true);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor Allocation System</title>
     
-    setTimeout(() => {
-      // 1. Create array of students [1...60], excluding 57
-      const students = Array.from({ length: TOTAL_ROLL_NUMBERS }, (_, i) => i + 1)
-        .filter(num => num !== EXCLUDED_ROLL);
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- jsPDF and AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-      // 2. Fisher-Yates Shuffle
-      for (let i = students.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [students[i], students[j]] = [students[j], students[i]];
-      }
-
-      // 3. Custom Distribution Logic
-      // Strategy: 
-      // - HAK gets exactly 6
-      // - Others (except KPB) get 7
-      // - KPB gets the rest (which should be 11)
-      
-      const newAllocation = TUTORS.map(tutorName => ({
-        name: tutorName,
-        students: []
-      }));
-
-      let studentPointer = 0;
-
-      // Helper to find tutor by name and assign students
-      const assignToTutor = (name, count) => {
-        const targetGroup = newAllocation.find(g => g.name === name);
-        if (targetGroup) {
-            // If count is null, take all remaining
-            const takeCount = count === null ? (students.length - studentPointer) : count;
-            targetGroup.students = students.slice(studentPointer, studentPointer + takeCount);
-            studentPointer += takeCount;
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-      };
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 p-4 sm:p-8">
 
-      // A. Assign HAK (6)
-      assignToTutor("HAK", HAK_COUNT);
-
-      // B. Assign Others (7 each) - Skipping KPB for now
-      const otherTutors = TUTORS.filter(t => t !== "HAK" && t !== "KPB");
-      otherTutors.forEach(tutorName => {
-        assignToTutor(tutorName, STANDARD_COUNT);
-      });
-
-      // C. Assign KPB (The Maximum / Remainder)
-      assignToTutor("KPB", null);
-
-      // 4. Sort student numbers for cleaner display within each tutor group
-      newAllocation.forEach(group => {
-        group.students.sort((a, b) => a - b);
-      });
-
-      setAllocation(newAllocation);
-      setLoading(false);
-    }, 400);
-  };
-
-  const handleDownloadPDF = () => {
-    if (!window.jspdf || allocation.length === 0) return;
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    // Title
-    doc.setFontSize(20);
-    doc.setTextColor(41, 128, 185);
-    doc.text("Student-Tutor Allocation Report", 105, 15, { align: "center" });
-    
-    // Timestamp
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, { align: "center" });
-
-    // Prepare table data
-    const tableBody = allocation.map(group => [
-      group.name,
-      group.students.join(", "),
-      group.students.length // Added count column for clarity given the uneven split
-    ]);
-
-    doc.autoTable({
-      head: [['Tutor Name', 'Assigned Roll Numbers', 'Count']],
-      body: tableBody,
-      startY: 30,
-      theme: 'grid',
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-      columnStyles: {
-        0: { cellWidth: 40, fontStyle: 'bold' },
-        1: { cellWidth: 'auto' },
-        2: { cellWidth: 20, halign: 'center' }
-      },
-      styles: { fontSize: 10, cellPadding: 3 },
-      didDrawPage: function (data) {
-        doc.setFontSize(8);
-        doc.setTextColor(150);
-        doc.text(
-          `Page ${doc.internal.getNumberOfPages()}`,
-          data.settings.margin.left,
-          doc.internal.pageSize.height - 10
-        );
-      }
-    });
-
-    doc.save("tutor-allocation.pdf");
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 p-4 sm:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div class="max-w-7xl mx-auto space-y-8">
         
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center p-3 bg-blue-600 rounded-full shadow-lg mb-4">
-            <GraduationCap className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Tutor Allocation System
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Randomly assign students (1-60, excl. 57) to faculty mentors.
-          </p>
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <div class="inline-flex items-center justify-center p-3 bg-blue-600 rounded-full shadow-lg mb-4">
+                <!-- GraduationCap Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Tutor Allocation System
+            </h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                Randomly assign students (1-60, excl. 57) to faculty mentors.
+            </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-          <button
-            onClick={handleAllocate}
-            disabled={loading}
-            className={`
-              flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md transition-all transform hover:-translate-y-1
-              ${loading 
-                ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
-                : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg active:scale-95'}
-            `}
-          >
-            <Shuffle className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-            {allocation.length === 0 ? 'Generate Allocation' : 'Re-Shuffle Allocation'}
-          </button>
-
-          {allocation.length > 0 && (
-            <button
-              onClick={handleDownloadPDF}
-              disabled={!isPdfReady}
-              className={`
-                flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md border-2 transition-all transform hover:-translate-y-1
-                ${!isPdfReady 
-                  ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-wait' 
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-blue-200 hover:bg-blue-50 active:scale-95'}
-              `}
-            >
-              <FileDown className="w-5 h-5" />
-              Download PDF
+        <!-- Controls -->
+        <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+            <button id="allocateBtn" onclick="handleAllocate()" class="flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all transform hover:-translate-y-1">
+                <!-- Shuffle Icon -->
+                <svg id="shuffleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l14.2-12.6c.8-1.1 2-1.7 3.3-1.7H22"/><path d="M2 6h1.4c1.3 0 2.5.6 3.3 1.7l14.2 12.6c.8 1.1 2 1.7 3.3 1.7H22"/></svg>
+                <span id="allocateBtnText">Generate Allocation</span>
             </button>
-          )}
+
+            <button id="downloadBtn" onclick="handleDownloadPDF()" class="hidden flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md border-2 bg-white border-slate-200 text-slate-700 hover:border-blue-200 hover:bg-blue-50 active:scale-95 transition-all transform hover:-translate-y-1">
+                <!-- FileDown Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
+                Download PDF
+            </button>
         </div>
 
-        {/* Results Grid */}
-        {allocation.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {allocation.map((group, idx) => (
-              <div 
-                key={idx} 
-                className={`
-                  rounded-2xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col
-                  ${group.name === 'KPB' ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100' : 'bg-white border-slate-200'}
-                `}
-              >
-                <div className={`
-                  p-4 flex items-center justify-between border-b
-                  ${group.name === 'KPB' ? 'bg-blue-100 border-blue-200' : 'bg-slate-50 border-slate-100'}
-                `}>
-                  <div className="flex items-center gap-3">
-                    <div className={`
-                      w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm
-                      ${group.name === 'KPB' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}
-                    `}>
-                      {group.name.substring(0,2)}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-800 leading-tight">{group.name}</h3>
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        {group.name === 'KPB' ? 'Head Faculty' : 'Faculty'}
-                      </span>
-                    </div>
-                  </div>
-                  <span className={`
-                    text-xs font-bold px-2 py-1 rounded-full
-                    ${group.name === 'KPB' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}
-                  `}>
-                    {group.students.length}
-                  </span>
-                </div>
-                
-                <div className="p-4 flex-grow">
-                  <div className="flex flex-wrap gap-2">
-                    {group.students.map((rollNo) => (
-                      <span 
-                        key={rollNo}
-                        className={`
-                          inline-flex items-center justify-center w-8 h-8 text-sm font-medium rounded-lg cursor-default transition-colors
-                          ${group.name === 'KPB' 
-                            ? 'bg-white text-blue-700 border border-blue-100 shadow-sm' 
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}
-                        `}
-                      >
-                        {rollNo}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <!-- Results Grid -->
+        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Cards will be injected here -->
+        </div>
 
-        {/* Empty State */}
-        {allocation.length === 0 && !loading && (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
-            <Users className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-slate-400">Ready to Allocate</h3>
-            <p className="text-slate-400 mt-2">Click the button above to start the randomization.</p>
-          </div>
-        )}
-      </div>
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+            <div class="inline-flex justify-center mb-4">
+                <!-- Users Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-200"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 class="text-xl font-medium text-slate-400">Ready to Allocate</h3>
+            <p class="text-slate-400 mt-2">Click the button above to start the randomization.</p>
+        </div>
+
     </div>
-  );
-}
+
+    <script>
+        // --- Configuration & Constants ---
+        const TUTORS = [
+            "HAK", "KPB", "GCZ", "VTV", "PJD", "FA", "NCV", "CMS"
+        ];
+        const TOTAL_ROLL_NUMBERS = 60;
+        const EXCLUDED_ROLL = 57;
+        const HAK_COUNT = 6;
+        const STANDARD_COUNT = 7;
+
+        // --- State ---
+        let currentAllocation = [];
+        let isGenerating = false;
+
+        // --- Logic ---
+
+        function handleAllocate() {
+            if (isGenerating) return;
+            isGenerating = true;
+            
+            // Update UI for loading state
+            const btn = document.getElementById('allocateBtn');
+            const btnText = document.getElementById('allocateBtnText');
+            const icon = document.getElementById('shuffleIcon');
+            
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            icon.classList.add('animate-spin');
+            btnText.innerText = "Shuffling...";
+
+            setTimeout(() => {
+                // 1. Create array of students [1...60], excluding 57
+                const students = Array.from({ length: TOTAL_ROLL_NUMBERS }, (_, i) => i + 1)
+                    .filter(num => num !== EXCLUDED_ROLL);
+
+                // 2. Fisher-Yates Shuffle
+                for (let i = students.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [students[i], students[j]] = [students[j], students[i]];
+                }
+
+                // 3. Custom Distribution Logic
+                const newAllocation = TUTORS.map(tutorName => ({
+                    name: tutorName,
+                    students: []
+                }));
+
+                let studentPointer = 0;
+
+                const assignToTutor = (name, count) => {
+                    const targetGroup = newAllocation.find(g => g.name === name);
+                    if (targetGroup) {
+                        const takeCount = count === null ? (students.length - studentPointer) : count;
+                        targetGroup.students = students.slice(studentPointer, studentPointer + takeCount);
+                        studentPointer += takeCount;
+                    }
+                };
+
+                // A. Assign HAK (6)
+                assignToTutor("HAK", HAK_COUNT);
+
+                // B. Assign Others (7 each) - Skipping KPB
+                const otherTutors = TUTORS.filter(t => t !== "HAK" && t !== "KPB");
+                otherTutors.forEach(tutorName => {
+                    assignToTutor(tutorName, STANDARD_COUNT);
+                });
+
+                // C. Assign KPB (The Remainder/Maximum)
+                assignToTutor("KPB", null);
+
+                // 4. Sort students numerically within groups
+                newAllocation.forEach(group => {
+                    group.students.sort((a, b) => a - b);
+                });
+
+                // Update State and Render
+                currentAllocation = newAllocation;
+                renderResults();
+
+                // Reset Button UI
+                isGenerating = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                icon.classList.remove('animate-spin');
+                btnText.innerText = "Re-Shuffle Allocation";
+                
+                // Show Download Button
+                document.getElementById('downloadBtn').classList.remove('hidden');
+                document.getElementById('downloadBtn').classList.add('flex');
+
+            }, 400); // 400ms delay for UX
+        }
+
+        function renderResults() {
+            const grid = document.getElementById('resultsGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Hide empty state
+            emptyState.style.display = 'none';
+            grid.innerHTML = '';
+
+            currentAllocation.forEach((group, index) => {
+                const isKPB = group.name === 'KPB';
+                
+                // Card Styles
+                const cardBaseClass = `rounded-2xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col animate-fade-in`;
+                const cardColorClass = isKPB 
+                    ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100' 
+                    : 'bg-white border-slate-200';
+                
+                // Header Styles
+                const headerClass = `p-4 flex items-center justify-between border-b ${isKPB ? 'bg-blue-100 border-blue-200' : 'bg-slate-50 border-slate-100'}`;
+                
+                // Avatar Styles
+                const avatarClass = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isKPB ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`;
+                
+                // Badge Styles
+                const badgeClass = `text-xs font-bold px-2 py-1 rounded-full ${isKPB ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`;
+
+                // Student Pills
+                const studentsHtml = group.students.map(rollNo => {
+                    const pillClass = isKPB 
+                        ? 'bg-white text-blue-700 border border-blue-100 shadow-sm' 
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200';
+                    return `<span class="inline-flex items-center justify-center w-8 h-8 text-sm font-medium rounded-lg cursor-default transition-colors ${pillClass}">${rollNo}</span>`;
+                }).join('');
+
+                const cardHtml = `
+                    <div class="${cardBaseClass} ${cardColorClass}" style="animation-delay: ${index * 50}ms">
+                        <div class="${headerClass}">
+                            <div class="flex items-center gap-3">
+                                <div class="${avatarClass}">
+                                    ${group.name.substring(0,2)}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 leading-tight">${group.name}</h3>
+                                    <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        ${isKPB ? 'Head Faculty' : 'Faculty'}
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="${badgeClass}">${group.students.length}</span>
+                        </div>
+                        <div class="p-4 flex-grow">
+                            <div class="flex flex-wrap gap-2">
+                                ${studentsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                grid.innerHTML += cardHtml;
+            });
+        }
+
+        function handleDownloadPDF() {
+            if (!window.jspdf || currentAllocation.length === 0) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Title
+            doc.setFontSize(20);
+            doc.setTextColor(41, 128, 185);
+            doc.text("Student-Tutor Allocation Report", 105, 15, { align: "center" });
+            
+            // Timestamp
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, { align: "center" });
+
+            // Prepare table data
+            const tableBody = currentAllocation.map(group => [
+                group.name,
+                group.students.join(", "),
+                group.students.length
+            ]);
+
+            doc.autoTable({
+                head: [['Tutor Name', 'Assigned Roll Numbers', 'Count']],
+                body: tableBody,
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+                columnStyles: {
+                    0: { cellWidth: 40, fontStyle: 'bold' },
+                    1: { cellWidth: 'auto' },
+                    2: { cellWidth: 20, halign: 'center' }
+                },
+                styles: { fontSize: 10, cellPadding: 3 },
+                didDrawPage: function (data) {
+                    doc.setFontSize(8);
+                    doc.setTextColor(150);
+                    doc.text(
+                        `Page ${doc.internal.getNumberOfPages()}`,
+                        data.settings.margin.left,
+                        doc.internal.pageSize.height - 10
+                    );
+                }
+            });
+
+            doc.save("tutor-allocation.pdf");
+        }
+    </script>
+</body>
+</html>
