@@ -3,125 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guide Allocation System</title>
+    <title>MCA Project Allocation | Admin Console</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Fonts: Outfit (Modern Headings) & Inter (UI) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- jsPDF and AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-    <style>
-        /* Custom animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        heading: ['"Outfit"', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            950: '#09090b', // Zinc 950
+                            900: '#18181b', // Zinc 900
+                            800: '#27272a', // Zinc 800
+                            700: '#3f3f46', // Zinc 700
+                            border: '#27272a',
+                        },
+                        brand: {
+                            500: '#6366f1', // Indigo
+                            600: '#4f46e5',
+                            glow: 'rgba(99, 102, 241, 0.15)'
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
         }
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+    </script>
+
+    <style>
+        body { 
+            background-color: #09090b;
+            color: #e4e4e7;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+        /* Animation Utilities */
+        .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* Glass / Border Utilities */
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50 font-sans text-slate-800 p-4 sm:p-8">
+<body class="min-h-screen antialiased selection:bg-brand-500 selection:text-white">
 
-    <div class="max-w-7xl mx-auto space-y-8">
-        
-        <!-- Header -->
-        <div class="text-center space-y-2">
-            <div class="inline-flex items-center justify-center p-3 bg-blue-600 rounded-full shadow-lg mb-4">
-                <!-- GraduationCap Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 glass-panel border-b-0 border-b-dark-border">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            
+            <!-- Logo Area -->
+            <div class="flex items-center gap-4">
+                <!-- Custom Geometric SVG Logo -->
+                <div class="relative w-10 h-10 flex items-center justify-center">
+                    <div class="absolute inset-0 bg-brand-500 rounded-xl opacity-20 blur-md"></div>
+                    <svg class="relative w-10 h-10 text-white" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 5L32.9904 12.5V27.5L20 35L7.00962 27.5V12.5L20 5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20 15V25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M15 20H25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="20" cy="20" r="2" fill="currentColor"/>
+                        <circle cx="20" cy="5" r="2" fill="currentColor" class="text-brand-500"/>
+                        <circle cx="32.99" cy="27.5" r="2" fill="currentColor" class="text-brand-500"/>
+                        <circle cx="7.01" cy="27.5" r="2" fill="currentColor" class="text-brand-500"/>
+                    </svg>
+                </div>
+                
+                <div class="flex flex-col">
+                    <h1 class="font-heading font-bold text-xl tracking-tight text-white leading-none">
+                        Allocation<span class="text-brand-500">Console</span>
+                    </h1>
+                    <span class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mt-1">MCA Dept • 2025-26</span>
+                </div>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Guide Allocation System
-            </h1>
-            <p class="text-lg text-slate-600 max-w-2xl mx-auto">
-                Randomly assign students (1-60, excl. 57) to faculty mentors.
-            </p>
+
+            <!-- Status Indicator -->
+            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-dark-800 border border-dark-700">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-medium text-zinc-400">System Active</span>
+            </div>
         </div>
+    </nav>
 
-        <!-- Controls -->
-        <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-            <button id="allocateBtn" onclick="handleAllocate()" class="flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all transform hover:-translate-y-1">
-                <!-- Shuffle Icon -->
-                <svg id="shuffleIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l14.2-12.6c.8-1.1 2-1.7 3.3-1.7H22"/><path d="M2 6h1.4c1.3 0 2.5.6 3.3 1.7l14.2 12.6c.8 1.1 2 1.7 3.3 1.7H22"/></svg>
-                <span id="allocateBtnText">Generate Allocation</span>
-            </button>
+    <main class="max-w-7xl mx-auto px-6 py-12 space-y-12">
+        
+        <!-- Control Bar -->
+        <div class="relative overflow-hidden rounded-2xl bg-dark-900 border border-dark-800 p-8 shadow-2xl">
+            <!-- Subtle Grid Background -->
+            <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 20px 20px;"></div>
+            
+            <div class="relative flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="space-y-2 max-w-xl">
+                    <h2 class="font-heading text-3xl font-semibold text-white">Project Guide Distribution</h2>
+                    <p class="text-zinc-400 font-light leading-relaxed">
+                        Algorithmically distribute Final Year MCA students (Roll 1-60) to faculty guides based on predefined capacity constraints.
+                    </p>
+                </div>
 
-            <button id="downloadBtn" onclick="handleDownloadPDF()" class="hidden flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-lg font-semibold shadow-md border-2 bg-white border-slate-200 text-slate-700 hover:border-blue-200 hover:bg-blue-50 active:scale-95 transition-all transform hover:-translate-y-1">
-                <!-- FileDown Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>
-                Download PDF
-            </button>
-        </div>
+                <div class="flex items-center gap-4">
+                    <button id="allocateBtn" onclick="handleAllocate()" class="group relative inline-flex items-center justify-center h-12 px-8 font-medium transition-all duration-200 bg-white text-zinc-950 rounded-lg hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 focus:ring-offset-dark-900">
+                        <div class="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10"></div>
+                        <span id="btnIcon" class="mr-2 transition-transform group-hover:rotate-180">
+                            <!-- Refresh CW Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                        </span>
+                        <span id="allocateBtnText">Run Allocation</span>
+                    </button>
 
-        <!-- Results Grid -->
-        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <!-- Cards will be injected here -->
+                    <button id="downloadBtn" onclick="handleDownloadPDF()" class="hidden inline-flex items-center justify-center h-12 px-6 font-medium text-zinc-300 transition-all duration-200 bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-dark-700 focus:ring-offset-dark-900">
+                        <!-- Download Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Empty State -->
-        <div id="emptyState" class="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
-            <div class="inline-flex justify-center mb-4">
-                <!-- Users Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-200"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div id="emptyState" class="flex flex-col items-center justify-center py-24 text-center rounded-2xl border border-dashed border-dark-800 bg-dark-900/50">
+            <div class="w-16 h-16 mb-6 rounded-2xl bg-dark-800 flex items-center justify-center">
+                <svg class="w-8 h-8 text-zinc-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
             </div>
-            <h3 class="text-xl font-medium text-slate-400">Ready to Allocate</h3>
-            <p class="text-slate-400 mt-2">Click the button above to start the randomization.</p>
+            <h3 class="font-heading text-xl text-white font-medium">Awaiting Input</h3>
+            <p class="text-zinc-500 mt-2 max-w-sm">System is ready. Initialize the allocation sequence to generate guide assignments.</p>
         </div>
 
-    </div>
+        <!-- Grid -->
+        <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <!-- JS Injection -->
+        </div>
+
+    </main>
 
     <script>
-        // --- Configuration & Constants ---
-        const TUTORS = [
-            "HAK", "KPB", "GCZ", "VTV", "PJD", "FA", "NCV", "CMS"
+        // --- Configuration ---
+        const GUIDES = [
+            "Hyderali K", 
+            "Balachandran K P", 
+            "Geever C Zacharias", 
+            "Vasudevan T V", 
+            "Priya J D", 
+            "Febin Aziz", 
+            "Nowshad C V", 
+            "C M Sulaikha"
         ];
+        
+        // --- Guide Short Codes Mapping ---
+        const GUIDE_SHORT_CODES = {
+            "Hyderali K": "HAK",
+            "Balachandran K P": "KPB",
+            "Geever C Zacharias": "GCZ",
+            "Vasudevan T V": "VTV",
+            "Priya J D": "PJD",
+            "Febin Aziz": "FA",
+            "Nowshad C V": "NCV",
+            "C M Sulaikha": "CMS"
+        };
+
+        // --- STUDENT NAMES LIST (Populated from User Data) ---
+        // Array index 0 matches Roll 1, index 59 matches Roll 60.
+        // Roll 57 (index 56) is Excluded.
+        const STUDENT_NAMES_LIST = [
+            "ABDUL JANEEB K",        // 1
+            "ADITHYA DAS MP",        // 2
+            "AKHILA",                // 3
+            "AMINA P M",             // 4
+            "ANAN P ABBAS",          // 5
+            "ANJU E",                // 6
+            "ANSILA NV",             // 7
+            "ATHILA ASHRAF",         // 8
+            "AYISHA RANDHA",         // 9
+            "BASIM SHEBIN",          // 10
+            "DEVIKA S",              // 11
+            "DILBUR ROSHAN MOHAMED", // 12
+            "ESWARDAS K NAIR",       // 13
+            "FASAL RAHMAN",          // 14
+            "FATHIMATH MUHSINA T P", // 15
+            "FATHIMATH SANA C V",    // 16
+            "FATHIMATHUL HANNATH",   // 17
+            "HANNA",                 // 18
+            "HENNA FATHIMA",         // 19
+            "HENNA FATHIMA K",       // 20
+            "HIBA NASRIN",           // 21
+            "JALALA P V",            // 22
+            "JASIR HASSAN K",        // 23
+            "JASNA SHERIN",          // 24
+            "JYOTHISH MOHAN A",      // 25
+            "K ANSAR",               // 26
+            "LAKSHMI H",             // 27
+            "MEGHNA P",              // 28
+            "MOHAMMED HAFIZ",        // 29
+            "MOHAMMED NIYAS",        // 30
+            "MOHAMMED SHIBILY",      // 31
+            "MUHAMMED FAZIL C",      // 32
+            "MUHAMMED REJAH E",      // 33
+            "MUHSEENA JAS P",        // 34
+            "MUHSINA",               // 35
+            "NAADHI RAHMAN P",       // 36
+            "NAFEESA K T",           // 37
+            "NAHEEL K K",            // 38
+            "NAJMATH MV",            // 39
+            "NASEEBA SALAHUDHEEN",   // 40
+            "NAYANA U",              // 41
+            "NIHAL N",               // 42
+            "RAMSHIYA M S",          // 43
+            "RIFA",                  // 44
+            "RIZVANA K A",           // 45
+            "ROSHNA SHIRIN M",       // 46
+            "SAFA MARIYAM",          // 47
+            "SAIFUDEEN",             // 48
+            "SARAN S KRISHNAN",      // 49
+            "SETHULAKSHMI K",        // 50
+            "SHAHNA S",              // 51
+            "SHIFANA NASRIN",        // 52
+            "SHIMNA SHERIN",         // 53
+            "SNEHA K P",             // 54
+            "SOMIN KURIYAKOSE",      // 55
+            "SOORAJ K P",            // 56
+            "EXCLUDED (Roll 57)",    // 57 (Excluded in Logic)
+            "SWAFWANA SHERI K P",    // 58
+            "VAISHNAVI K",           // 59
+            "YUSRA"                  // 60
+        ];
+
         const TOTAL_ROLL_NUMBERS = 60;
         const EXCLUDED_ROLL = 57;
+
+        // Generate student objects mapping Roll No (i+1) to Name
+        const STUDENTS_DATA = Array.from({ length: TOTAL_ROLL_NUMBERS }, (_, i) => {
+            const roll = i + 1;
+            // Map index to name. Index 0 is Roll 1.
+            const name = STUDENT_NAMES_LIST[i] || `Student Name ${roll}`;
+            
+            return {
+                roll: roll,
+                name: name
+            };
+        }).filter(s => s.roll !== EXCLUDED_ROLL);
+
         const HAK_COUNT = 6;
         const STANDARD_COUNT = 7;
 
-        // --- State ---
         let currentAllocation = [];
         let isGenerating = false;
-
-        // --- Logic ---
 
         function handleAllocate() {
             if (isGenerating) return;
             isGenerating = true;
             
-            // Update UI for loading state
             const btn = document.getElementById('allocateBtn');
             const btnText = document.getElementById('allocateBtnText');
-            const icon = document.getElementById('shuffleIcon');
+            const icon = document.getElementById('btnIcon');
             
-            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btn.classList.add('opacity-75', 'cursor-wait');
             icon.classList.add('animate-spin');
-            btnText.innerText = "Shuffling...";
+            btnText.innerText = "Processing...";
 
             setTimeout(() => {
-                // 1. Create array of students [1...60], excluding 57
-                const students = Array.from({ length: TOTAL_ROLL_NUMBERS }, (_, i) => i + 1)
-                    .filter(num => num !== EXCLUDED_ROLL);
+                const students = [...STUDENTS_DATA];
 
-                // 2. Fisher-Yates Shuffle
+                // Fisher-Yates Shuffle
                 for (let i = students.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [students[i], students[j]] = [students[j], students[i]];
                 }
 
-                // 3. Custom Distribution Logic
-                const newAllocation = TUTORS.map(tutorName => ({
-                    name: tutorName,
-                    students: []
-                }));
-
+                // Distribution
+                const newAllocation = GUIDES.map(guideName => ({ name: guideName, students: [] }));
                 let studentPointer = 0;
 
-                const assignToTutor = (name, count) => {
+                const assignToGuide = (name, count) => {
                     const targetGroup = newAllocation.find(g => g.name === name);
                     if (targetGroup) {
                         const takeCount = count === null ? (students.length - studentPointer) : count;
@@ -130,99 +310,98 @@
                     }
                 };
 
-                // A. Assign HAK (6)
-                assignToTutor("HAK", HAK_COUNT);
-
-                // B. Assign Others (7 each) - Skipping KPB
-                const otherTutors = TUTORS.filter(t => t !== "HAK" && t !== "KPB");
-                otherTutors.forEach(tutorName => {
-                    assignToTutor(tutorName, STANDARD_COUNT);
+                // Assign HOD (Hyderali K)
+                assignToGuide("Hyderali K", HAK_COUNT);
+                
+                // Assign Standard Count to others
+                GUIDES.filter(t => t !== "Hyderali K" && t !== "Balachandran K P").forEach(guideName => {
+                    assignToGuide(guideName, STANDARD_COUNT);
                 });
 
-                // C. Assign KPB (The Remainder/Maximum)
-                assignToTutor("KPB", null);
+                // Assign Remainder to Balachandran K P
+                assignToGuide("Balachandran K P", null);
 
-                // 4. Sort students numerically within groups
-                newAllocation.forEach(group => {
-                    group.students.sort((a, b) => a - b);
-                });
+                // Sort by Roll No for display
+                newAllocation.forEach(group => group.students.sort((a, b) => a.roll - b.roll));
 
-                // Update State and Render
                 currentAllocation = newAllocation;
                 renderResults();
 
-                // Reset Button UI
                 isGenerating = false;
-                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                btn.classList.remove('opacity-75', 'cursor-wait');
                 icon.classList.remove('animate-spin');
-                btnText.innerText = "Re-Shuffle Allocation";
+                btnText.innerText = "Re-Run Allocation";
                 
-                // Show Download Button
-                document.getElementById('downloadBtn').classList.remove('hidden');
-                document.getElementById('downloadBtn').classList.add('flex');
+                const dlBtn = document.getElementById('downloadBtn');
+                dlBtn.classList.remove('hidden');
+                dlBtn.classList.add('inline-flex');
 
-            }, 400); // 400ms delay for UX
+            }, 600);
         }
 
         function renderResults() {
             const grid = document.getElementById('resultsGrid');
             const emptyState = document.getElementById('emptyState');
             
-            // Hide empty state
             emptyState.style.display = 'none';
             grid.innerHTML = '';
 
             currentAllocation.forEach((group, index) => {
-                const isKPB = group.name === 'KPB';
+                const isHOD = group.name === 'Hyderali K';
                 
-                // Card Styles
-                const cardBaseClass = `rounded-2xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col animate-fade-in`;
-                const cardColorClass = isKPB 
-                    ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-100' 
-                    : 'bg-white border-slate-200';
-                
-                // Header Styles
-                const headerClass = `p-4 flex items-center justify-between border-b ${isKPB ? 'bg-blue-100 border-blue-200' : 'bg-slate-50 border-slate-100'}`;
-                
-                // Avatar Styles
-                const avatarClass = `w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isKPB ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`;
-                
-                // Badge Styles
-                const badgeClass = `text-xs font-bold px-2 py-1 rounded-full ${isKPB ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`;
+                let badge = isHOD 
+                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 tracking-wide shrink-0">HOD</span>`
+                    : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700 shrink-0">FACULTY</span>`;
 
-                // Student Pills
-                const studentsHtml = group.students.map(rollNo => {
-                    const pillClass = isKPB 
-                        ? 'bg-white text-blue-700 border border-blue-100 shadow-sm' 
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200';
-                    return `<span class="inline-flex items-center justify-center w-8 h-8 text-sm font-medium rounded-lg cursor-default transition-colors ${pillClass}">${rollNo}</span>`;
+                const borderColor = 'border-dark-700'; 
+                const bgClass = 'bg-dark-800';
+
+                // Display Roll No in Teal Box, Name next to it
+                const studentsHtml = group.students.map(student => {
+                    return `
+                        <div class="flex items-center gap-3 p-2 rounded-lg bg-dark-900/50 border border-dark-700 hover:border-dark-600 transition-colors w-full">
+                            <span class="flex items-center justify-center h-8 w-10 text-xs font-bold font-mono
+                                bg-teal-950 text-teal-400 border border-teal-800 rounded
+                                shadow-sm shadow-teal-900/20 shrink-0">
+                                ${student.roll}
+                            </span>
+                            <span class="text-sm text-zinc-300 font-medium truncate min-w-0" title="${student.name}">
+                                ${student.name}
+                            </span>
+                        </div>`;
                 }).join('');
+                
+                // Use explicit short code mapping
+                const initials = GUIDE_SHORT_CODES[group.name] || group.name.substring(0,2);
 
                 const cardHtml = `
-                    <div class="${cardBaseClass} ${cardColorClass}" style="animation-delay: ${index * 50}ms">
-                        <div class="${headerClass}">
-                            <div class="flex items-center gap-3">
-                                <div class="${avatarClass}">
-                                    ${group.name.substring(0,2)}
+                    <div class="fade-in-up flex flex-col rounded-xl border ${borderColor} ${bgClass} shadow-lg group hover:border-dark-600 transition-colors duration-300 h-full" style="animation-delay: ${index * 50}ms">
+                        <div class="p-5 border-b border-dark-700 flex items-start justify-between bg-white/5 gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="h-10 w-10 shrink-0 rounded-lg bg-dark-700 border border-dark-600 flex items-center justify-center font-heading font-bold text-white text-sm shadow-inner">
+                                    ${initials}
                                 </div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800 leading-tight">${group.name}</h3>
-                                    <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                                        ${isKPB ? 'Head Faculty' : 'Faculty'}
-                                    </span>
+                                <div class="flex flex-col min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 class="font-heading font-semibold text-lg text-white leading-tight">${group.name}</h3>
+                                        ${badge}
+                                    </div>
                                 </div>
                             </div>
-                            <span class="${badgeClass}">${group.students.length}</span>
+                            <div class="flex flex-col items-end shrink-0">
+                                <span class="text-2xl font-bold text-white leading-none">${group.students.length}</span>
+                                <span class="text-[9px] text-zinc-400 uppercase font-medium">Students</span>
+                            </div>
                         </div>
-                        <div class="p-4 flex-grow">
-                            <div class="flex flex-wrap gap-2">
+                        <div class="p-4 grow">
+                            <div class="flex flex-col gap-2">
                                 ${studentsHtml}
                             </div>
                         </div>
                     </div>
                 `;
                 
-                grid.innerHTML += cardHtml;
+                grid.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
 
@@ -232,50 +411,106 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // Title
-            doc.setFontSize(20);
-            doc.setTextColor(41, 128, 185);
-            doc.text("Student-Tutor Allocation Report", 105, 15, { align: "center" });
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(20, 20, 20);
+            doc.text("MCA Project Guide Allocation", 14, 20);
             
-            // Timestamp
+            doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, { align: "center" });
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Academic Year 2025-2026 • Generated ${new Date().toLocaleDateString()}`, 14, 26);
 
-            // Prepare table data
-            const tableBody = currentAllocation.map(group => [
-                group.name,
-                group.students.join(", "),
-                group.students.length
-            ]);
+            doc.setDrawColor(230, 230, 230);
+            doc.line(14, 32, 196, 32);
+
+            // Table Data Construction
+            const tableBody = [];
+            const guideEndRowIndices = new Set();
+            let rowIndex = 0;
+            
+            currentAllocation.forEach(group => {
+                let guideName = group.name;
+                if (group.name === 'Hyderali K') guideName += " (HOD)";
+                
+                const studentCount = group.students.length;
+
+                group.students.forEach((student, index) => {
+                    const row = [];
+                    if (index === 0) {
+                        // First row for this guide: Add the Guide Name cell with rowSpan
+                        row.push({ 
+                            content: guideName, 
+                            rowSpan: studentCount,
+                            styles: { valign: 'middle', fontStyle: 'bold', fillColor: [252, 252, 252] } 
+                        });
+                    }
+                    // Add student details
+                    row.push(student.roll);
+                    row.push(student.name);
+                    
+                    tableBody.push(row);
+
+                    // Track the last row index for this guide group
+                    if (index === studentCount - 1) {
+                        guideEndRowIndices.add(rowIndex);
+                    }
+                    rowIndex++;
+                });
+            });
 
             doc.autoTable({
-                head: [['Tutor Name', 'Assigned Roll Numbers', 'Count']],
+                head: [['Guide', 'Roll No', 'Student Name']],
                 body: tableBody,
-                startY: 30,
-                theme: 'grid',
-                headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-                columnStyles: {
-                    0: { cellWidth: 40, fontStyle: 'bold' },
-                    1: { cellWidth: 'auto' },
-                    2: { cellWidth: 20, halign: 'center' }
+                startY: 40,
+                theme: 'grid', // Ensures separation lines
+                styles: { 
+                    fontSize: 9, 
+                    cellPadding: 3, 
+                    font: "helvetica",
+                    lineColor: [60, 60, 60], // Dark gray grid lines for visibility
+                    lineWidth: 0.1,
+                    valign: 'middle',
+                    textColor: [20, 20, 20]
                 },
-                styles: { fontSize: 10, cellPadding: 3 },
-                didDrawPage: function (data) {
-                    doc.setFontSize(8);
-                    doc.setTextColor(150);
-                    doc.text(
-                        `Page ${doc.internal.getNumberOfPages()}`,
-                        data.settings.margin.left,
-                        doc.internal.pageSize.height - 10
-                    );
+                headStyles: { 
+                    fillColor: [40, 40, 40], // Dark header
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    lineWidth: 0.1,
+                    lineColor: [60, 60, 60]
+                },
+                columnStyles: {
+                    0: { cellWidth: 50 }, // Guide Name
+                    1: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, // Roll
+                    2: { cellWidth: 'auto' } // Name
+                },
+                didDrawCell: function(data) {
+                    if (data.section === 'body') {
+                        // Draw bold line at the bottom of the guide group
+                        let drawBoldLine = false;
+
+                        // For Guide Column (Col 0), it spans, so its bottom is always a separator
+                        if (data.column.index === 0) {
+                            drawBoldLine = true;
+                        } 
+                        // For Student Columns (Col 1, 2), check if it's the last row of a group
+                        else if (guideEndRowIndices.has(data.row.index)) {
+                            drawBoldLine = true;
+                        }
+
+                        if (drawBoldLine) {
+                            const doc = data.doc;
+                            doc.setDrawColor(0, 0, 0); // Black
+                            doc.setLineWidth(0.5); // Thick bold line
+                            doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
+                        }
+                    }
                 }
             });
 
-            doc.save("tutor-allocation.pdf");
+            doc.save("Guide_Allocation_2025-26.pdf");
         }
     </script>
 </body>
 </html>
-
-
