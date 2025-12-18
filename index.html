@@ -31,6 +31,7 @@
                             900: '#18181b', // Zinc 900
                             800: '#27272a', // Zinc 800
                             700: '#3f3f46', // Zinc 700
+                            600: '#52525b', // Zinc 600
                             border: '#27272a',
                         },
                         brand: {
@@ -70,6 +71,25 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+
+        /* --- NEW: High Visibility Input Styles for Custom Class --- */
+        .input-dark {
+            background-color: #27272a !important; /* Dark 800 */
+            border: 1px solid #52525b; /* Dark 600 */
+            color: #ffffff !important; /* White text */
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            display: block;
+            margin-top: 0.25rem;
+        }
+        .input-dark::placeholder {
+            color: #a1a1aa; /* Light Gray */
+        }
+        .input-dark:focus {
+            outline: 2px solid #6366f1;
+            border-color: transparent;
+        }
     </style>
 </head>
 <body class="min-h-screen antialiased selection:bg-brand-500 selection:text-white">
@@ -98,25 +118,22 @@
                     <h1 class="font-heading font-bold text-xl tracking-tight text-white leading-none">
                         Allocation<span class="text-brand-500">Console</span>
                     </h1>
-                    <span class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mt-1">MCA Dept • 2025-26</span>
+                    <span id="navSubtitle" class="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mt-1">MCA Dept • 2025-26</span>
                 </div>
             </div>
 
-            <!-- Status Indicator -->
-            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-dark-800 border border-dark-700">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span class="text-xs font-medium text-zinc-400">System Active</span>
+            <!-- --- NEW: Mode Switcher --- -->
+            <div class="flex items-center bg-dark-800 p-1 rounded-lg border border-dark-700">
+                <button onclick="switchMode('MCA')" id="tabMCA" class="px-4 py-1.5 rounded-md text-xs font-semibold transition-all text-white bg-dark-600 shadow-sm">MCA Dept</button>
+                <button onclick="switchMode('OTHER')" id="tabOther" class="px-4 py-1.5 rounded-md text-xs font-medium transition-all text-zinc-400 hover:text-white">Custom Class</button>
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto px-6 py-12 space-y-12">
         
-        <!-- Control Bar -->
-        <div class="relative overflow-hidden rounded-2xl bg-dark-900 border border-dark-800 p-8 shadow-2xl">
+        <!-- Control Bar (MCA MODE) -->
+        <div id="panelMCA" class="relative overflow-hidden rounded-2xl bg-dark-900 border border-dark-800 p-8 shadow-2xl">
             <!-- Subtle Grid Background -->
             <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 20px 20px;"></div>
             
@@ -129,19 +146,63 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <button id="allocateBtn" onclick="handleAllocate()" class="group relative inline-flex items-center justify-center h-12 px-8 font-medium transition-all duration-200 bg-white text-zinc-950 rounded-lg hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 focus:ring-offset-dark-900">
+                    <button id="allocateBtn" onclick="handleAllocate()" class="action-btn group relative inline-flex items-center justify-center h-12 px-8 font-medium transition-all duration-200 bg-white text-zinc-950 rounded-lg hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 focus:ring-offset-dark-900">
                         <div class="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10"></div>
-                        <span id="btnIcon" class="mr-2 transition-transform group-hover:rotate-180">
+                        <span class="mr-2 btn-icon transition-transform group-hover:rotate-180">
                             <!-- Refresh CW Icon -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
                         </span>
-                        <span id="allocateBtnText">Run Allocation</span>
+                        <span class="btn-text">Run Allocation</span>
                     </button>
 
-                    <button id="downloadBtn" onclick="handleDownloadPDF()" class="hidden inline-flex items-center justify-center h-12 px-6 font-medium text-zinc-300 transition-all duration-200 bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-dark-700 focus:ring-offset-dark-900">
+                    <button onclick="handleDownloadPDF()" class="download-btn hidden inline-flex items-center justify-center h-12 px-6 font-medium text-zinc-300 transition-all duration-200 bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-dark-700 focus:ring-offset-dark-900">
                         <!-- Download Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- NEW: Control Bar (OTHER MODE) --- -->
+        <div id="panelOther" class="hidden relative overflow-hidden rounded-2xl bg-dark-900 border border-dark-800 p-8 shadow-2xl transition-all duration-300">
+            <div class="space-y-6">
+                <div class="flex items-center justify-between border-b border-dark-800 pb-4">
+                    <h2 class="font-heading text-2xl font-semibold text-white">Custom Class Allocation</h2>
+                    <div class="flex items-center gap-3">
+                        <button onclick="handleAllocate()" class="action-btn bg-brand-600 hover:bg-brand-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors border border-transparent">
+                            <span class="btn-text">Run Allocation</span>
+                        </button>
+                        <button onclick="handleDownloadPDF()" class="download-btn hidden bg-dark-800 hover:bg-dark-700 text-white px-4 py-2 rounded-lg border border-dark-700 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label class="block mb-1 text-xs font-bold text-zinc-300 uppercase tracking-wide">Class Name</label>
+                        <input type="text" id="inputClassName" class="input-dark" placeholder="e.g. B.Tech CS Final Year">
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-xs font-bold text-zinc-300 uppercase tracking-wide">Total Students</label>
+                        <input type="number" id="inputStudentCount" class="input-dark" placeholder="e.g. 60">
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-xs font-bold text-zinc-300 uppercase tracking-wide">Excluded Roll Nos</label>
+                        <input type="text" id="inputExcluded" class="input-dark" placeholder="e.g. 5, 12, 44">
+                    </div>
+                    <div>
+                        <label class="block mb-1 text-xs font-bold text-zinc-300 uppercase tracking-wide">No. of Guides</label>
+                        <input type="number" id="inputGuideCount" class="input-dark" placeholder="Enter count..." oninput="renderGuideInputs()">
+                    </div>
+                </div>
+
+                <!-- Dynamic Guide Inputs -->
+                <div id="guideInputsContainer" class="hidden">
+                    <label class="block mb-3 text-xs font-bold text-zinc-300 uppercase tracking-wide">Enter Guide Names</label>
+                    <div id="guideInputsGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- Inputs injected here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -273,67 +334,193 @@
         const KPB_COUNT = 10;
         const STANDARD_COUNT = 7;
 
+        // --- GLOBAL STATE ---
+        let APP_MODE = 'MCA'; // 'MCA' or 'OTHER'
         let currentAllocation = [];
         let isGenerating = false;
+        let currentClassName = "MCA Project Guide Allocation"; // For PDF Title
+
+        // --- NEW: Toggle Logic ---
+        function switchMode(mode) {
+            APP_MODE = mode;
+            
+            const tabMCA = document.getElementById('tabMCA');
+            const tabOther = document.getElementById('tabOther');
+            const panelMCA = document.getElementById('panelMCA');
+            const panelOther = document.getElementById('panelOther');
+            const navSub = document.getElementById('navSubtitle');
+            
+            // Reset Results
+            document.getElementById('resultsGrid').innerHTML = '';
+            document.getElementById('emptyState').style.display = 'flex';
+            document.querySelectorAll('.download-btn').forEach(btn => {
+                btn.classList.add('hidden');
+                btn.classList.remove('inline-flex');
+            });
+
+            if (mode === 'MCA') {
+                tabMCA.className = "px-4 py-1.5 rounded-md text-xs font-semibold transition-all text-white bg-dark-600 shadow-sm";
+                tabOther.className = "px-4 py-1.5 rounded-md text-xs font-medium transition-all text-zinc-400 hover:text-white";
+                panelMCA.classList.remove('hidden');
+                panelOther.classList.add('hidden');
+                navSub.innerText = "MCA Dept • 2025-26";
+            } else {
+                tabOther.className = "px-4 py-1.5 rounded-md text-xs font-semibold transition-all text-white bg-dark-600 shadow-sm";
+                tabMCA.className = "px-4 py-1.5 rounded-md text-xs font-medium transition-all text-zinc-400 hover:text-white";
+                panelOther.classList.remove('hidden');
+                panelMCA.classList.add('hidden');
+                navSub.innerText = "Custom Configuration";
+            }
+        }
+
+        // --- NEW: Render Custom Guide Inputs ---
+        function renderGuideInputs() {
+            const count = parseInt(document.getElementById('inputGuideCount').value) || 0;
+            const container = document.getElementById('guideInputsContainer');
+            const grid = document.getElementById('guideInputsGrid');
+            
+            grid.innerHTML = '';
+            
+            if (count > 0) {
+                container.classList.remove('hidden');
+                for (let i = 1; i <= count; i++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'input-dark';
+                    input.placeholder = `Guide Name ${i}`;
+                    input.id = `guideName_${i}`;
+                    grid.appendChild(input);
+                }
+            } else {
+                container.classList.add('hidden');
+            }
+        }
 
         function handleAllocate() {
             if (isGenerating) return;
             isGenerating = true;
             
-            const btn = document.getElementById('allocateBtn');
-            const btnText = document.getElementById('allocateBtnText');
-            const icon = document.getElementById('btnIcon');
-            
-            btn.classList.add('opacity-75', 'cursor-wait');
-            icon.classList.add('animate-spin');
-            btnText.innerText = "Processing...";
+            // Handle loading state for ALL buttons
+            const btns = document.querySelectorAll('.action-btn');
+            btns.forEach(btn => {
+                btn.classList.add('opacity-75', 'cursor-wait');
+                const btnText = btn.querySelector('.btn-text');
+                const btnIcon = btn.querySelector('.btn-icon');
+                if (btnText) btnText.innerText = "Processing...";
+                if (btnIcon) btnIcon.classList.add('animate-spin');
+            });
 
             setTimeout(() => {
-                const students = [...STUDENTS_DATA];
-
-                // Fisher-Yates Shuffle
-                for (let i = students.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [students[i], students[j]] = [students[j], students[i]];
+                if (APP_MODE === 'MCA') {
+                    generateMCAAllocation();
+                } else {
+                    generateCustomAllocation();
                 }
-
-                // Distribution
-                const newAllocation = GUIDES.map(guideName => ({ name: guideName, students: [] }));
-                let studentPointer = 0;
-
-                const assignToGuide = (name, count) => {
-                    const targetGroup = newAllocation.find(g => g.name === name);
-                    if (targetGroup) {
-                        const takeCount = count === null ? (students.length - studentPointer) : count;
-                        targetGroup.students = students.slice(studentPointer, studentPointer + takeCount);
-                        studentPointer += takeCount;
-                    }
-                };
-
-                // Assign Balachandran K P (KPB)
-                assignToGuide("Balachandran K P", KPB_COUNT);
                 
-                // Assign Standard Count to others
-                GUIDES.filter(t => t !== "Balachandran K P").forEach(guideName => {
-                    assignToGuide(guideName, STANDARD_COUNT);
-                });
-
-                // Sort by Roll No for display
-                newAllocation.forEach(group => group.students.sort((a, b) => a.roll - b.roll));
-
-                currentAllocation = newAllocation;
                 renderResults();
 
                 isGenerating = false;
-                btn.classList.remove('opacity-75', 'cursor-wait');
-                icon.classList.remove('animate-spin');
-                btnText.innerText = "Re-Run Allocation";
+                btns.forEach(btn => {
+                    btn.classList.remove('opacity-75', 'cursor-wait');
+                    const btnText = btn.querySelector('.btn-text');
+                    const btnIcon = btn.querySelector('.btn-icon');
+                    if (btnText) btnText.innerText = "Re-Run Allocation";
+                    if (btnIcon) btnIcon.classList.remove('animate-spin');
+                });
                 
-                const dlBtn = document.getElementById('downloadBtn');
-                dlBtn.classList.remove('hidden');
-                dlBtn.classList.add('inline-flex');
+                // Show PDF buttons
+                document.querySelectorAll('.download-btn').forEach(btn => {
+                    btn.classList.remove('hidden');
+                    btn.classList.add('inline-flex');
+                });
 
             }, 600);
+        }
+
+        function generateMCAAllocation() {
+            currentClassName = "MCA Project Guide Allocation";
+            const students = [...STUDENTS_DATA];
+
+            // Fisher-Yates Shuffle
+            for (let i = students.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [students[i], students[j]] = [students[j], students[i]];
+            }
+
+            // Distribution
+            const newAllocation = GUIDES.map(guideName => ({ name: guideName, students: [] }));
+            let studentPointer = 0;
+
+            const assignToGuide = (name, count) => {
+                const targetGroup = newAllocation.find(g => g.name === name);
+                if (targetGroup) {
+                    const takeCount = count === null ? (students.length - studentPointer) : count;
+                    targetGroup.students = students.slice(studentPointer, studentPointer + takeCount);
+                    studentPointer += takeCount;
+                }
+            };
+
+            // Assign Balachandran K P (KPB)
+            assignToGuide("Balachandran K P", KPB_COUNT);
+            
+            // Assign Standard Count to others
+            GUIDES.filter(t => t !== "Balachandran K P").forEach(guideName => {
+                assignToGuide(guideName, STANDARD_COUNT);
+            });
+
+            // Sort by Roll No for display
+            newAllocation.forEach(group => group.students.sort((a, b) => a.roll - b.roll));
+            currentAllocation = newAllocation;
+        }
+
+        function generateCustomAllocation() {
+            // Get Custom Data
+            const className = document.getElementById('inputClassName').value || "Custom Class Allocation";
+            currentClassName = className;
+            
+            const totalStudents = parseInt(document.getElementById('inputStudentCount').value) || 0;
+            const excludedStr = document.getElementById('inputExcluded').value;
+            const excludedRolls = excludedStr ? excludedStr.split(',').map(s => parseInt(s.trim())) : [];
+            
+            const guideCount = parseInt(document.getElementById('inputGuideCount').value) || 0;
+            const guides = [];
+            for (let i = 1; i <= guideCount; i++) {
+                const name = document.getElementById(`guideName_${i}`).value || `Guide ${i}`;
+                guides.push(name);
+            }
+
+            if (totalStudents === 0 || guides.length === 0) {
+                alert("Please enter valid student count and guides.");
+                return;
+            }
+
+            // Create Students
+            const students = [];
+            for (let i = 1; i <= totalStudents; i++) {
+                if (!excludedRolls.includes(i)) {
+                    students.push({
+                        roll: i,
+                        name: "" // No name for custom
+                    });
+                }
+            }
+
+            // Shuffle
+            for (let i = students.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [students[i], students[j]] = [students[j], students[i]];
+            }
+
+            // Distribute Fairly
+            const allocation = guides.map(name => ({ name, students: [] }));
+            students.forEach((student, index) => {
+                const guideIndex = index % guides.length;
+                allocation[guideIndex].students.push(student);
+            });
+
+            // Sort
+            allocation.forEach(g => g.students.sort((a, b) => a.roll - b.roll));
+            currentAllocation = allocation;
         }
 
         function renderResults() {
@@ -344,18 +531,20 @@
             grid.innerHTML = '';
 
             currentAllocation.forEach((group, index) => {
-                const isHOD = group.name === 'Hyderali K';
-                
-                let badge = isHOD 
-                    ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 tracking-wide shrink-0">HOD</span>`
-                    : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700 shrink-0">FACULTY</span>`;
+                let badge = "";
+                let initials = group.name.substring(0,2).toUpperCase();
+                let studentsHtml = "";
 
-                const borderColor = 'border-dark-700'; 
-                const bgClass = 'bg-dark-800';
+                if (APP_MODE === 'MCA') {
+                    // --- MCA Specific Badge & List ---
+                    const isHOD = group.name === 'Hyderali K';
+                    badge = isHOD 
+                        ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 tracking-wide shrink-0">HOD</span>`
+                        : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700 shrink-0">FACULTY</span>`;
+                    if (GUIDE_SHORT_CODES[group.name]) initials = GUIDE_SHORT_CODES[group.name];
 
-                // Display Roll No in Teal Box, Name next to it
-                const studentsHtml = group.students.map(student => {
-                    return `
+                    // List with Names
+                    studentsHtml = group.students.map(student => `
                         <div class="flex items-center gap-3 p-2 rounded-lg bg-dark-900/50 border border-dark-700 hover:border-dark-600 transition-colors w-full">
                             <span class="flex items-center justify-center h-8 w-10 text-xs font-bold font-mono
                                 bg-teal-950 text-teal-400 border border-teal-800 rounded
@@ -365,11 +554,24 @@
                             <span class="text-sm text-zinc-300 font-medium truncate min-w-0" title="${student.name}">
                                 ${student.name}
                             </span>
-                        </div>`;
-                }).join('');
-                
-                // Use explicit short code mapping
-                const initials = GUIDE_SHORT_CODES[group.name] || group.name.substring(0,2);
+                        </div>`).join('');
+                } else {
+                    // --- Custom Mode: Generic Badge & Pills ---
+                    badge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700 shrink-0">GUIDE</span>`;
+                    const parts = group.name.split(' ');
+                    if(parts.length > 1) initials = (parts[0][0] + parts[1][0]).toUpperCase();
+
+                    // Grid of Pills (No Names)
+                    studentsHtml = `<div class="flex flex-wrap gap-2">` + 
+                        group.students.map(student => `
+                            <span class="flex items-center justify-center h-8 w-10 text-sm font-bold bg-teal-950 text-teal-400 border border-teal-800 rounded-md shadow-sm shadow-teal-900/20 cursor-default hover:bg-teal-900 hover:text-white transition-colors">
+                                ${student.roll}
+                            </span>
+                        `).join('') + `</div>`;
+                }
+
+                const borderColor = 'border-dark-700'; 
+                const bgClass = 'bg-dark-800';
 
                 const cardHtml = `
                     <div class="fade-in-up flex flex-col rounded-xl border ${borderColor} ${bgClass} shadow-lg group hover:border-dark-600 transition-colors duration-300 h-full" style="animation-delay: ${index * 50}ms">
@@ -380,7 +582,7 @@
                                 </div>
                                 <div class="flex flex-col min-w-0">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <h3 class="font-heading font-semibold text-lg text-white leading-tight">${group.name}</h3>
+                                        <h3 class="font-heading font-semibold text-lg text-white leading-tight truncate">${group.name}</h3>
                                         ${badge}
                                     </div>
                                 </div>
@@ -391,7 +593,7 @@
                             </div>
                         </div>
                         <div class="p-4 grow">
-                            <div class="flex flex-col gap-2">
+                            <div class="${APP_MODE === 'MCA' ? 'flex flex-col gap-2' : ''}">
                                 ${studentsHtml}
                             </div>
                         </div>
@@ -411,102 +613,113 @@
             doc.setFont("helvetica", "bold");
             doc.setFontSize(16);
             doc.setTextColor(20, 20, 20);
-            doc.text("MCA Project Guide Allocation", 14, 20);
+            doc.text(currentClassName, 14, 20);
             
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
             doc.setTextColor(100, 100, 100);
-            doc.text(`Academic Year 2025-2026 • Generated ${new Date().toLocaleDateString()}`, 14, 26);
+            doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 26);
 
             doc.setDrawColor(230, 230, 230);
             doc.line(14, 32, 196, 32);
 
-            // Table Data Construction
-            const tableBody = [];
-            const guideEndRowIndices = new Set();
-            let rowIndex = 0;
-            
-            currentAllocation.forEach(group => {
-                let guideName = group.name;
-                if (group.name === 'Hyderali K') guideName += " (HOD)";
+            // --- DIFFERENT PDF LAYOUTS BASED ON MODE ---
+            if (APP_MODE === 'MCA') {
+                // ... MCA LOGIC (3 Columns, Grouped) ...
+                const tableBody = [];
+                const guideEndRowIndices = new Set();
+                let rowIndex = 0;
                 
-                const studentCount = group.students.length;
+                currentAllocation.forEach(group => {
+                    let guideName = group.name;
+                    if (group.name === 'Hyderali K') guideName += " (HOD)";
+                    const studentCount = group.students.length;
 
-                group.students.forEach((student, index) => {
-                    const row = [];
-                    if (index === 0) {
-                        // First row for this guide: Add the Guide Name cell with rowSpan
-                        row.push({ 
-                            content: guideName, 
-                            rowSpan: studentCount,
-                            styles: { valign: 'middle', fontStyle: 'bold', fillColor: [252, 252, 252] } 
-                        });
-                    }
-                    // Add student details
-                    row.push(student.roll);
-                    row.push(student.name);
-                    
-                    tableBody.push(row);
-
-                    // Track the last row index for this guide group
-                    if (index === studentCount - 1) {
-                        guideEndRowIndices.add(rowIndex);
-                    }
-                    rowIndex++;
+                    group.students.forEach((student, index) => {
+                        const row = [];
+                        if (index === 0) {
+                            row.push({ 
+                                content: guideName, 
+                                rowSpan: studentCount,
+                                styles: { valign: 'middle', fontStyle: 'bold', fillColor: [252, 252, 252] } 
+                            });
+                        }
+                        row.push(student.roll);
+                        row.push(student.name);
+                        tableBody.push(row);
+                        if (index === studentCount - 1) guideEndRowIndices.add(rowIndex);
+                        rowIndex++;
+                    });
                 });
-            });
 
-            doc.autoTable({
-                head: [['Guide', 'Roll No', 'Student Name']],
-                body: tableBody,
-                startY: 40,
-                theme: 'grid', // Ensures separation lines
-                styles: { 
-                    fontSize: 9, 
-                    cellPadding: 3, 
-                    font: "helvetica",
-                    lineColor: [60, 60, 60], // Dark gray grid lines for visibility
-                    lineWidth: 0.1,
-                    valign: 'middle',
-                    textColor: [20, 20, 20]
-                },
-                headStyles: { 
-                    fillColor: [40, 40, 40], // Dark header
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold',
-                    lineWidth: 0.1,
-                    lineColor: [60, 60, 60]
-                },
-                columnStyles: {
-                    0: { cellWidth: 50 }, // Guide Name
-                    1: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, // Roll
-                    2: { cellWidth: 'auto' } // Name
-                },
-                didDrawCell: function(data) {
-                    if (data.section === 'body') {
-                        // Draw bold line at the bottom of the guide group
-                        let drawBoldLine = false;
+                doc.autoTable({
+                    head: [['Guide', 'Roll No', 'Student Name']],
+                    body: tableBody,
+                    startY: 40,
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 3, font: "helvetica", lineColor: [60, 60, 60], lineWidth: 0.1, valign: 'middle', textColor: [20, 20, 20] },
+                    headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold', lineWidth: 0.1, lineColor: [60, 60, 60] },
+                    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }, 2: { cellWidth: 'auto' } },
+                    didDrawCell: function(data) {
+                        if (data.section === 'body') {
+                            let drawBoldLine = false;
+                            if (data.column.index === 0) drawBoldLine = true;
+                            else if (guideEndRowIndices.has(data.row.index)) drawBoldLine = true;
 
-                        // For Guide Column (Col 0), it spans, so its bottom is always a separator
-                        if (data.column.index === 0) {
-                            drawBoldLine = true;
-                        } 
-                        // For Student Columns (Col 1, 2), check if it's the last row of a group
-                        else if (guideEndRowIndices.has(data.row.index)) {
-                            drawBoldLine = true;
-                        }
-
-                        if (drawBoldLine) {
-                            const doc = data.doc;
-                            doc.setDrawColor(0, 0, 0); // Black
-                            doc.setLineWidth(0.5); // Thick bold line
-                            doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
+                            if (drawBoldLine) {
+                                const d = data.doc; d.setDrawColor(0, 0, 0); d.setLineWidth(0.5);
+                                d.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            doc.save("Guide_Allocation_2025-26.pdf");
+            } else {
+                // ... CUSTOM LOGIC (2 Columns: Guide | Comma-Separated Rolls) ...
+                const tableBody = currentAllocation.map(group => [
+                    group.name,
+                    group.students.map(s => s.roll).join(', ')
+                ]);
+
+                doc.autoTable({
+                    head: [['Guide', 'Allocated Roll Numbers']],
+                    body: tableBody,
+                    startY: 40,
+                    theme: 'grid',
+                    styles: { 
+                        fontSize: 10, 
+                        cellPadding: 6, 
+                        font: "helvetica",
+                        lineColor: [60, 60, 60],
+                        lineWidth: 0.1,
+                        valign: 'top',
+                        textColor: [20, 20, 20],
+                        overflow: 'linebreak'
+                    },
+                    headStyles: { 
+                        fillColor: [40, 40, 40],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        lineWidth: 0.1,
+                        lineColor: [60, 60, 60]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 60, fontStyle: 'bold' },
+                        1: { cellWidth: 'auto' }
+                    },
+                    didDrawCell: function(data) {
+                        if (data.section === 'body') {
+                            const d = data.doc;
+                            d.setDrawColor(0, 0, 0);
+                            d.setLineWidth(0.5);
+                            d.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
+                        }
+                    }
+                });
+            }
+
+            const safeName = currentClassName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            doc.save(`${safeName}_allocation.pdf`);
         }
     </script>
 </body>
